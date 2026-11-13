@@ -17,3 +17,5 @@ uvicorn
 requests
 streamlit
 pytest
+langchain-groq
+fonttools
