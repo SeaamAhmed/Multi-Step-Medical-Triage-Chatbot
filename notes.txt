@@ -1,0 +1,84 @@
+TRIAGE NOTES
+============
+
+FILE 1: Triage [IITT + ESI].pdf  (data/triage)
+
+Emergency red flags (page numbers):
+- Page 1 : IITT criteria for age less than 12 & vital signs
+- Page 2 : IITT criteria for age equal & greater than 12 & vital signs
+- Page 3 : IITT Reference card
+- Page 11 : ESI Level 1 (Examples & Table 3-1)
+
+Other useful pages:
+- Page 9 : how to decide the ESI triage level (figure 2-2)
+- Page 13 : questions to ask the patient (Level-2 high-risk criteria)
+
+Exact red-flag phrases from the PDF (copy word for word):
+• Unresponsive
+AIRWAY & BREATHING
+• Stridor
+• Respiratory distress* or central cyanosis
+CIRCULATION
+• Capillary refill >3 sec
+• Weak and fast pulse
+• Heavy bleeding
+• Cold extremities
+• Any two of
+  -Lethargy
+  -Sunken eyes
+  -Very slow skin pinch
+  -Drinks poorly
+• HR <50 or >150
+DISABILITY
+• Active convulsions
+• Any two of:
+  -Altered mental status
+  -Hypothermia or fever
+  -Headache
+  -Stiff neck
+• Hypoglycaemia
+OTHER
+• Any infant <8 days old
+• Age <2 months and temp <36 or >39°C
+• High-risk trauma*
+• Poisoning/ingestion or dangerous chemical exposure*
+• Threatened limb*
+• Acute testicular/scrotal pain or priapism
+• Snake bite
+• Acute chest or abdominal pain (>50 years old)
+• ECG with acute ischaemia (if done)
+• Violent or aggressive
+PREGNANT WITH ANY OF:
+• Heavy bleeding
+• Severe abdominal pain
+• Seizures or altered mental status
+• Severe headache
+• Visual changes
+• SBP ≥160 or DBP ≥110
+• Active labour
+• Trauma
+ESI Level 1:
+• Ineffective airway clearance
+• Ineffective respiratory pattern
+• Impaired gas exchange
+• Ineffective tissue perfusion 
+• Obtunded/unresponsive patient
+•  SpO2 < 90% that is not the patient’s norm, with other signs of respiratory compromise
+• Anaphylaxis  
+•  Hypotension with signs of hypoperfusion (e.g., Chest pain with signs of hypoperfusion and systolic blood pressure of 80 mm Hg)
+• Hypoglycemia 
+• Severe bradycardia or tachycardia 
+• Flaccid infant 
+• Cardiac and/or pulmonary arrest (or appears to be imminent) 
+•  Penetrating trauma of head, neck, abdomen, chest requiring a lifesaving intervention
+ESI Level 2:
+•  Active chest pain, suspicious for acute coronary syndrome but does not require an immediate lifesaving intervention. 
+• Signs of a stroke but does not meet level-1 criteria. 
+• A possible ectopic pregnancy, hemodynamically stable.
+•  A patient on chemotherapy, and therefore immunocompromised, with a fever. 
+•  Transplant recipient presenting with a fever or other indication of infection. 
+• Actively suicidal or homicidal patient 
+•  A needle stick in a health care worker (time sensitive to postexposure prophylaxis treatment) 
+• Sexual assault survivor 
+• Increasing respiratory e昀昀ort 
+• Postpartum hemorrhage
