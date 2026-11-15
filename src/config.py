@@ -10,7 +10,7 @@ DATA_DIR = BASE_DIR / "data"
 CHROMA_DIR = str(DATA_DIR / "chroma_db")
 
 INTAKE_MODEL = os.getenv("INTAKE_MODEL", "openai/gpt-oss-120b")
-MAIN_MODEL = os.getenv("MAIN_MODEL", "gemini-3.8-flash")
+MAIN_MODEL = os.getenv("MAIN_MODEL", "gemini-3.5-flash")
 EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 DISCLAIMER = ("\n\nThis is general information based on our reference documents. "
