@@ -30,3 +30,7 @@ def medicine_docs(p, k=3):
                 seen.add(key)
                 found.append(doc)
     return found
+
+def search_docs(query, k=4):
+    """Plain search over the whole index (used for follow-up questions)."""
+    return _database().similarity_search(query, k=k)
