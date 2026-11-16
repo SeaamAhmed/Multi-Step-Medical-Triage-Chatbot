@@ -10,7 +10,7 @@ from src.medicines import ALLOWED, allowed_medicines
 from src.utils import reply_text
 from src.medicine_search import medicine_docs, search_docs
 
-llm = ChatGoogleGenerativeAI(model=MAIN_MODEL, temperature=0.2, timeout=60, max_retries=2)
+llm = ChatGoogleGenerativeAI(model=MAIN_MODEL, temperature=0.2, timeout=120, max_retries=2)
 chain = ChatPromptTemplate.from_template(GUIDANCE_PROMPT) | llm
 
 followup_chain = ChatPromptTemplate.from_template(FOLLOWUP_PROMPT) | llm

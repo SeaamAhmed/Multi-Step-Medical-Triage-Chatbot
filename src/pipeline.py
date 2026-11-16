@@ -15,7 +15,7 @@ ALLERGY_RE = re.compile(r"allerg|reaction to|can'?t take|cannot take", re.I)
 class ChatSession:
     def __init__(self):
         self.agent = IntakeAgent()
-        self.stage = "intake"   # intake | followup | emergency | crisis
+        self.stage = "intake"   # intake | retry | followup | emergency | crisis
         self.guidance = ""
         self.triage, self.medical = [], []
         self.history = []
@@ -32,14 +32,17 @@ class ChatSession:
         return {"reply": reply, "stage": self.stage,
                 "patient": self.patient.model_dump()}
 
-    def _guidance(self) -> str:
+    def _guidance(self):
+        """Returns (text, ok). ok is False when the guidance could not be prepared."""
         try:
             self.triage, self.medical = retrieve(self.patient)
-            self.guidance = answer(self.patient, self.triage, self.medical)
-            return self.guidance + INVITE
+            text = answer(self.patient, self.triage, self.medical)
         except Exception:
-            self.guidance = ERROR_MSG
-            return ERROR_MSG
+            return ERROR_MSG, False
+        if text == ERROR_MSG:
+            return ERROR_MSG, False
+        self.guidance = text
+        return text + INVITE, True
 
     def _note_new_info(self, message: str):
         """Save a newly mentioned medicine allergy so the allow-list respects it."""
@@ -83,22 +86,29 @@ class ChatSession:
         if self.stage == "crisis":
             return self._out(CRISIS_MSG)
 
-        # 3. After the guidance, talk with the person.
+        # 3. The guidance failed earlier: any message tries it again.
+        if self.stage == "retry":
+            text, ok = self._guidance()
+            if ok:
+                self.stage = "followup"
+            return self._out(text)
+
+        # 4. After the guidance, talk with the person.
         if self.stage == "followup":
             return self._out(self._followup(message))
 
-        # 4. Intake interview; when code says it is complete, give guidance.
+        # 5. Intake interview; when code says it is complete, give guidance.
         reply = self.agent.step(message)
         if self.patient.intake_complete:
-            reply = reply + "\n\n" + self._guidance()
-            self.stage = "followup"
+            text, ok = self._guidance()
+            self.stage = "followup" if ok else "retry"
+            reply = reply + "\n\n" + text
         return self._out(reply)
 
 
 if __name__ == "__main__":
     session = ChatSession()
     print("Bot:", session.greeting)
-    print("(type 'new' for a new chat, 'quit' to exit)")
     try:
         while True:
             msg = input("You: ")

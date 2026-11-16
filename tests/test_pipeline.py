@@ -70,3 +70,24 @@ def test_allergy_in_followup_is_recorded(monkeypatch):
     s.patient.allergies = []
     s.send("actually I'm allergic to paracetamol")
     assert any(w in " ".join(s.patient.allergies) for w in ("paracetamol", "acetaminophen"))
+
+def test_failed_guidance_can_be_retried(monkeypatch):
+    calls = {"n": 0}
+
+    def flaky(p, t, m):
+        calls["n"] += 1
+        return pipeline.ERROR_MSG if calls["n"] == 1 else "GUIDANCE"
+
+    monkeypatch.setattr(pipeline, "retrieve", lambda p: ([], []))
+    monkeypatch.setattr(pipeline, "answer", flaky)
+    s = ChatSession()
+
+    def fake_step(msg):
+        s.patient.intake_complete = True
+        return "Thanks."
+    s.agent.step = fake_step
+
+    assert s.send("headache")["stage"] == "retry"
+    r = s.send("ok")
+    assert r["stage"] == "followup"
+    assert "GUIDANCE" in r["reply"]
