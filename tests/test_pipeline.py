@@ -91,3 +91,11 @@ def test_failed_guidance_can_be_retried(monkeypatch):
     r = s.send("ok")
     assert r["stage"] == "followup"
     assert "GUIDANCE" in r["reply"]
+
+def test_allergy_with_typo_is_recorded(monkeypatch):
+    monkeypatch.setattr(pipeline, "follow_up", lambda *a, **k: "OK")
+    s = _session()
+    s.stage = "followup"
+    s.patient.allergies = []
+    s.send("btw, I'm allergic to paracetemol")
+    assert any(w in " ".join(s.patient.allergies) for w in ("paracetamol", "acetaminophen"))

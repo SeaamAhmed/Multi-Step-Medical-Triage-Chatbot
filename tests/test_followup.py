@@ -1,4 +1,4 @@
-from src.guidance_agent import is_dose_question, drop_allergens
+from src.guidance_agent import is_dose_question, drop_allergens, relevant_medicines
 from src.schemas import PatientIntake
 
 
@@ -20,3 +20,16 @@ def test_drop_allergens():
     result = drop_allergens(["acetaminophen", "antacid"], p)
     assert "acetaminophen" not in result
     assert "antacid" in result
+
+def test_dose_question_with_typo():
+    assert is_dose_question("how many paracetemol?")
+
+
+def test_relevant_medicines():
+    p = PatientIntake()
+    p.chief_complaint = "headache"
+    p.symptoms = ["headache"]
+    assert relevant_medicines(["acetaminophen", "antacid"], p) == ["acetaminophen"]
+    q = PatientIntake()
+    q.chief_complaint = "heartburn after meals"
+    assert relevant_medicines(["acetaminophen", "antacid"], q) == ["antacid"]

@@ -1,6 +1,7 @@
 # src/pipeline.py
 """One chat session: safety gate first, then intake, then guidance, then conversation."""
 import re
+import difflib
 
 from src.intake_agent import IntakeAgent, GREETING
 from src.safety import check_red_flags, check_crisis, EMERGENCY_MSG, CRISIS_MSG
@@ -45,13 +46,18 @@ class ChatSession:
         return text + INVITE, True
 
     def _note_new_info(self, message: str):
-        """Save a newly mentioned medicine allergy so the allow-list respects it."""
-        if ALLERGY_RE.search(message):
-            text = message.lower()
-            found = [a for info in ALLOWED.values() for a in info["aliases"] if a in text]
-            if found:
-                self.patient.allergies = list(self.patient.allergies or []) + found
-
+        """Save a newly mentioned medicine allergy (even if misspelled)."""
+        if not ALLERGY_RE.search(message):
+            return
+        aliases = [a for info in ALLOWED.values() for a in info["aliases"]]
+        found = []
+        for word in re.findall(r"[a-z]+", message.lower()):
+            if len(word) >= 5:
+                found += difflib.get_close_matches(word, aliases, n=1, cutoff=0.8)
+        found = [f for f in dict.fromkeys(found)]
+        if found:
+            self.patient.allergies = list(self.patient.allergies or []) + found
+            
     def _followup(self, message: str) -> str:
         self._note_new_info(message)
         if is_dose_question(message):

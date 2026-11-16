@@ -21,7 +21,7 @@ DOSE_MSG = ("I can't give doses, because the right amount depends on the product
 DOSE_QUESTION_RE = re.compile(
     r"\b(doses?|dosage|dosing|mg|milligrams?)\b"
     r"|\bhow (much|many|often|frequently)\b.*\b(take|taking|tablets?|pills?|capsules?|"
-    r"paracetamol|acetaminophen|ibuprofen|medicines?|medications?)\b", re.I)
+    r"parac\w*|acetam\w*|ibupro\w*|medicines?|medications?)\b", re.I)
 DOSE_IN_REPLY_RE = re.compile(
     r"\d+(\.\d+)?\s*(mg|milligrams?|ml|g|grams?|tablets?|pills?|capsules?)\b", re.I)
 
@@ -46,6 +46,24 @@ def drop_allergens(allowed, patient):
     allergies = " ".join(patient.allergies or []).lower()
     return [n for n in allowed
             if not any(a in allergies for a in ALLOWED[n]["aliases"])]
+
+
+RELEVANT_FOR = {
+    "acetaminophen": ("pain", "ache", "hurt", "sore", "headache", "migraine", "fever",
+                      "temperature", "cold", "flu", "sprain", "toothache", "cramp"),
+    "ibuprofen": ("pain", "ache", "hurt", "sore", "headache", "migraine", "fever",
+                  "inflammation", "swelling", "sprain", "toothache", "cramp"),
+    "antacid": ("stomach", "heartburn", "indigestion", "acid", "reflux", "ulcer", "bloat"),
+    "cetirizine": ("allerg", "hay fever", "itch", "rash", "sneez", "runny nose", "hives"),
+}
+
+
+def relevant_medicines(allowed, patient):
+    """Keep only medicines that fit what the person actually complained about."""
+    text = " ".join([patient.chief_complaint or ""] + list(patient.symptoms or [])
+                    + list(patient.associated_symptoms or [])).lower()
+    return [n for n in allowed if any(k in text for k in RELEVANT_FOR.get(n, ()))]
+
 
 NO_CONTEXT_MSG = ("I could not find enough information in my reference documents "
                   "about this. Please speak to a doctor or visit a clinic.")
@@ -85,7 +103,7 @@ def answer(patient: PatientIntake, triage_docs, medical_docs) -> str:
 
     triage_ctx, medical_ctx = _fmt(triage_docs), _fmt(medical_docs)
     context = triage_ctx + "\n" + medical_ctx
-    allowed = drop_allergens(allowed_medicines(patient, context), patient)
+    allowed = drop_allergens(relevant_medicines(allowed_medicines(patient, context), patient), patient)
     patient_json = patient.model_dump_json()
 
     inputs = {
@@ -116,7 +134,7 @@ def follow_up(patient, guidance, history, message, triage_docs, medical_docs) ->
     medical_docs = _unique(list(medical_docs) + medicine_docs(patient) + search_docs(message))
     triage_ctx, medical_ctx = _fmt(triage_docs), _fmt(medical_docs)
     context = triage_ctx + "\n" + medical_ctx
-    allowed = drop_allergens(allowed_medicines(patient, context), patient)
+    allowed = drop_allergens(relevant_medicines(allowed_medicines(patient, context), patient), patient)
     patient_json = patient.model_dump_json()
 
     inputs = {
