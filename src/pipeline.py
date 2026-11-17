@@ -10,6 +10,7 @@ from src.medicines import ALLOWED
 from src.guidance_agent import answer, follow_up, is_dose_question, DOSE_MSG, ERROR_MSG
 
 INVITE = "\n\nIf you have any questions about this, feel free to ask me."
+RETRY_MSG = ERROR_MSG + "\n\nSend me any message and I will try again."
 ALLERGY_RE = re.compile(r"allerg|reaction to|can'?t take|cannot take", re.I)
 
 
@@ -39,9 +40,9 @@ class ChatSession:
             self.triage, self.medical = retrieve(self.patient)
             text = answer(self.patient, self.triage, self.medical)
         except Exception:
-            return ERROR_MSG, False
+            return RETRY_MSG, False
         if text == ERROR_MSG:
-            return ERROR_MSG, False
+            return RETRY_MSG, False
         self.guidance = text
         return text + INVITE, True
 
@@ -57,7 +58,7 @@ class ChatSession:
         found = [f for f in dict.fromkeys(found)]
         if found:
             self.patient.allergies = list(self.patient.allergies or []) + found
-            
+
     def _followup(self, message: str) -> str:
         self._note_new_info(message)
         if is_dose_question(message):

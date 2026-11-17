@@ -78,6 +78,7 @@ RULES:
 - Name an allowed medicine only if the context shows it is used for this person's symptoms. Do not mention medicines for other problems.
 - Do not give doses or amounts. Say to follow the package label or ask a pharmacist.
 - Describe urgency in plain words. Do not use triage level numbers or jargon.
+- If the person is pregnant, say to check with a doctor or midwife before taking any medicine. Never promise that the person will be okay.
 - Never write the word "context" or mention where the information came from. Just state it plainly.
 
 Write in short sentences and simple words suited to a person aged {age}.
@@ -131,6 +132,7 @@ RULES:
   problem per chat and ask them to start a new chat.
 - If they just say thanks or goodbye, reply briefly and kindly.
 - Do not use triage level numbers or jargon.
+- If the person is pregnant, say to check with a doctor or midwife before taking any medicine. Never promise that the person will be okay.
 - Never write the word "context" or mention where the information came from. Just state it plainly.
 
 PATIENT (JSON): {patient_json}

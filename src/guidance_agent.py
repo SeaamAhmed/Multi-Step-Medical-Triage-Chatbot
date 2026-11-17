@@ -3,14 +3,16 @@ import re
 import logging
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
-from src.config import MAIN_MODEL, DISCLAIMER
+from src.config import MAIN_MODEL, FALLBACK_MODEL, DISCLAIMER
 from src.prompts import GUIDANCE_PROMPT, FOLLOWUP_PROMPT
 from src.schemas import PatientIntake
 from src.medicines import ALLOWED, allowed_medicines
 from src.utils import reply_text
 from src.medicine_search import medicine_docs, search_docs
 
-llm = ChatGoogleGenerativeAI(model=MAIN_MODEL, temperature=0.2, timeout=120, max_retries=2)
+primary = ChatGoogleGenerativeAI(model=MAIN_MODEL, temperature=0.2, timeout=45, max_retries=1)
+backup = ChatGoogleGenerativeAI(model=FALLBACK_MODEL, temperature=0.2, timeout=45, max_retries=1)
+llm = primary.with_fallbacks([backup])
 chain = ChatPromptTemplate.from_template(GUIDANCE_PROMPT) | llm
 
 followup_chain = ChatPromptTemplate.from_template(FOLLOWUP_PROMPT) | llm
@@ -64,6 +66,9 @@ def relevant_medicines(allowed, patient):
                     + list(patient.associated_symptoms or [])).lower()
     return [n for n in allowed if any(k in text for k in RELEVANT_FOR.get(n, ()))]
 
+def drop_for_pregnancy(allowed, patient):
+    """Name no medicine for a pregnant patient: a doctor must decide."""
+    return [] if patient.pregnant else allowed
 
 NO_CONTEXT_MSG = ("I could not find enough information in my reference documents "
                   "about this. Please speak to a doctor or visit a clinic.")
@@ -103,7 +108,7 @@ def answer(patient: PatientIntake, triage_docs, medical_docs) -> str:
 
     triage_ctx, medical_ctx = _fmt(triage_docs), _fmt(medical_docs)
     context = triage_ctx + "\n" + medical_ctx
-    allowed = drop_allergens(relevant_medicines(allowed_medicines(patient, context), patient), patient)
+    allowed = drop_for_pregnancy(drop_allergens(relevant_medicines(allowed_medicines(patient, context), patient), patient), patient)
     patient_json = patient.model_dump_json()
 
     inputs = {
@@ -134,7 +139,7 @@ def follow_up(patient, guidance, history, message, triage_docs, medical_docs) ->
     medical_docs = _unique(list(medical_docs) + medicine_docs(patient) + search_docs(message))
     triage_ctx, medical_ctx = _fmt(triage_docs), _fmt(medical_docs)
     context = triage_ctx + "\n" + medical_ctx
-    allowed = drop_allergens(relevant_medicines(allowed_medicines(patient, context), patient), patient)
+    allowed = drop_for_pregnancy(drop_allergens(relevant_medicines(allowed_medicines(patient, context), patient), patient), patient)
     patient_json = patient.model_dump_json()
 
     inputs = {

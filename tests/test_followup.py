@@ -1,4 +1,4 @@
-from src.guidance_agent import is_dose_question, drop_allergens, relevant_medicines
+from src.guidance_agent import is_dose_question, drop_allergens, relevant_medicines, drop_for_pregnancy
 from src.schemas import PatientIntake
 
 
@@ -33,3 +33,10 @@ def test_relevant_medicines():
     q = PatientIntake()
     q.chief_complaint = "heartburn after meals"
     assert relevant_medicines(["acetaminophen", "antacid"], q) == ["antacid"]
+
+def test_no_medicines_when_pregnant():
+    p = PatientIntake()
+    p.pregnant = True
+    assert drop_for_pregnancy(["acetaminophen"], p) == []
+    p.pregnant = False
+    assert drop_for_pregnancy(["acetaminophen"], p) == ["acetaminophen"]
