@@ -3,16 +3,14 @@ import re
 import logging
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
-from src.config import MAIN_MODEL, FALLBACK_MODEL, DISCLAIMER
+from src.config import MAIN_MODEL, DISCLAIMER
 from src.prompts import GUIDANCE_PROMPT, FOLLOWUP_PROMPT
 from src.schemas import PatientIntake
 from src.medicines import ALLOWED, allowed_medicines
 from src.utils import reply_text
 from src.medicine_search import medicine_docs, search_docs
 
-primary = ChatGoogleGenerativeAI(model=MAIN_MODEL, temperature=0.2, timeout=45, max_retries=1)
-backup = ChatGoogleGenerativeAI(model=FALLBACK_MODEL, temperature=0.2, timeout=45, max_retries=1)
-llm = primary.with_fallbacks([backup])
+llm = ChatGoogleGenerativeAI(model=MAIN_MODEL, temperature=0.2, timeout=60, max_retries=2)
 chain = ChatPromptTemplate.from_template(GUIDANCE_PROMPT) | llm
 
 followup_chain = ChatPromptTemplate.from_template(FOLLOWUP_PROMPT) | llm
@@ -70,6 +68,25 @@ def drop_for_pregnancy(allowed, patient):
     """Name no medicine for a pregnant patient: a doctor must decide."""
     return [] if patient.pregnant else allowed
 
+BLOOD_THINNERS = ("warfarin", "coumadin", "apixaban", "eliquis", "rivaroxaban", "xarelto",
+                  "dabigatran", "clopidogrel", "plavix", "heparin", "aspirin",
+                  "blood thinner")
+
+
+def drop_for_blood_thinners(allowed, patient):
+    """Name no medicine for someone on a blood thinner: a doctor must decide."""
+    meds = " ".join(patient.current_medications or []).lower()
+    return [] if any(b in meds for b in BLOOD_THINNERS) else allowed
+
+
+def safe_medicines(patient, context):
+    """The only medicines the bot may name: they fit the symptoms and are safe for this person."""
+    allowed = allowed_medicines(patient, context)
+    allowed = relevant_medicines(allowed, patient)
+    allowed = drop_allergens(allowed, patient)
+    allowed = drop_for_pregnancy(allowed, patient)
+    return drop_for_blood_thinners(allowed, patient)
+
 NO_CONTEXT_MSG = ("I could not find enough information in my reference documents "
                   "about this. Please speak to a doctor or visit a clinic.")
 ERROR_MSG = ("Sorry, I could not prepare guidance right now. Please try again in a "
@@ -108,7 +125,7 @@ def answer(patient: PatientIntake, triage_docs, medical_docs) -> str:
 
     triage_ctx, medical_ctx = _fmt(triage_docs), _fmt(medical_docs)
     context = triage_ctx + "\n" + medical_ctx
-    allowed = drop_for_pregnancy(drop_allergens(relevant_medicines(allowed_medicines(patient, context), patient), patient), patient)
+    allowed = safe_medicines(patient, context)
     patient_json = patient.model_dump_json()
 
     inputs = {
@@ -139,7 +156,7 @@ def follow_up(patient, guidance, history, message, triage_docs, medical_docs) ->
     medical_docs = _unique(list(medical_docs) + medicine_docs(patient) + search_docs(message))
     triage_ctx, medical_ctx = _fmt(triage_docs), _fmt(medical_docs)
     context = triage_ctx + "\n" + medical_ctx
-    allowed = drop_for_pregnancy(drop_allergens(relevant_medicines(allowed_medicines(patient, context), patient), patient), patient)
+    allowed = safe_medicines(patient, context)
     patient_json = patient.model_dump_json()
 
     inputs = {

@@ -1,4 +1,4 @@
-from src.guidance_agent import is_dose_question, drop_allergens, relevant_medicines, drop_for_pregnancy
+from src.guidance_agent import is_dose_question, drop_allergens, relevant_medicines, drop_for_pregnancy, drop_for_blood_thinners
 from src.schemas import PatientIntake
 
 
@@ -40,3 +40,10 @@ def test_no_medicines_when_pregnant():
     assert drop_for_pregnancy(["acetaminophen"], p) == []
     p.pregnant = False
     assert drop_for_pregnancy(["acetaminophen"], p) == ["acetaminophen"]
+
+def test_no_medicines_on_blood_thinners():
+    p = PatientIntake()
+    p.current_medications = ["warfarin"]
+    assert drop_for_blood_thinners(["acetaminophen"], p) == []
+    p.current_medications = ["vitamin d"]
+    assert drop_for_blood_thinners(["acetaminophen"], p) == ["acetaminophen"]
