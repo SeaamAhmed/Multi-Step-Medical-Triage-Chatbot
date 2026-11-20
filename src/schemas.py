@@ -21,4 +21,5 @@ class PatientIntake(BaseModel):
     current_medications: Optional[List[str]] = Field(None, description=NOT_ASKED)
     allergies: Optional[List[str]] = Field(None, description=NOT_ASKED)
     red_flags_reported: List[str] = []
+    inferred_fields: List[str] = []   # fields the program estimated from the person's words
     intake_complete: bool = False

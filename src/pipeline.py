@@ -1,6 +1,7 @@
 # src/pipeline.py
 """One chat session: safety gate first, then intake, then guidance, then conversation."""
 import re
+import time
 import difflib
 
 from src.intake_agent import IntakeAgent, GREETING
@@ -11,6 +12,7 @@ from src.guidance_agent import answer, follow_up, is_dose_question, DOSE_MSG, ER
 
 INVITE = "\n\nIf you have any questions about this, feel free to ask me."
 RETRY_MSG = ERROR_MSG + "\n\nSend me any message and I will try again."
+RETRY_WAITS = (4, 10)   # seconds to wait between automatic attempts
 ALLERGY_RE = re.compile(r"allerg|reaction to|can'?t take|cannot take", re.I)
 
 
@@ -35,16 +37,19 @@ class ChatSession:
                 "patient": self.patient.model_dump()}
 
     def _guidance(self):
-        """Returns (text, ok). ok is False when the guidance could not be prepared."""
-        try:
-            self.triage, self.medical = retrieve(self.patient)
-            text = answer(self.patient, self.triage, self.medical)
-        except Exception:
-            return RETRY_MSG, False
-        if text == ERROR_MSG:
-            return RETRY_MSG, False
-        self.guidance = text
-        return text + INVITE, True
+        """Returns (text, ok). Retries a couple of times if the model is busy."""
+        for attempt in range(len(RETRY_WAITS) + 1):
+            try:
+                self.triage, self.medical = retrieve(self.patient)
+                text = answer(self.patient, self.triage, self.medical)
+            except Exception:
+                text = ERROR_MSG
+            if text != ERROR_MSG:
+                self.guidance = text
+                return text + INVITE, True
+            if attempt < len(RETRY_WAITS):
+                time.sleep(RETRY_WAITS[attempt])
+        return RETRY_MSG, False
 
     def _note_new_info(self, message: str):
         """Save a newly mentioned medicine allergy (even if misspelled)."""

@@ -72,6 +72,7 @@ def test_allergy_in_followup_is_recorded(monkeypatch):
     assert any(w in " ".join(s.patient.allergies) for w in ("paracetamol", "acetaminophen"))
 
 def test_failed_guidance_can_be_retried(monkeypatch):
+    monkeypatch.setattr(pipeline, "RETRY_WAITS", ())
     calls = {"n": 0}
 
     def flaky(p, t, m):
@@ -99,3 +100,24 @@ def test_allergy_with_typo_is_recorded(monkeypatch):
     s.patient.allergies = []
     s.send("btw, I'm allergic to paracetemol")
     assert any(w in " ".join(s.patient.allergies) for w in ("paracetamol", "acetaminophen"))
+
+def test_busy_model_is_retried_automatically(monkeypatch):
+    monkeypatch.setattr(pipeline, "RETRY_WAITS", (0, 0))
+    calls = {"n": 0}
+
+    def flaky(p, t, m):
+        calls["n"] += 1
+        return pipeline.ERROR_MSG if calls["n"] <= 2 else "GUIDANCE"
+
+    monkeypatch.setattr(pipeline, "retrieve", lambda p: ([], []))
+    monkeypatch.setattr(pipeline, "answer", flaky)
+    s = ChatSession()
+
+    def fake_step(msg):
+        s.patient.intake_complete = True
+        return "Thanks."
+    s.agent.step = fake_step
+
+    r = s.send("headache")
+    assert r["stage"] == "followup"
+    assert "GUIDANCE" in r["reply"]

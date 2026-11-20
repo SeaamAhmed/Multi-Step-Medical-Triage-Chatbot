@@ -45,6 +45,9 @@ RULES:
   list it. Keep the field null so the assistant asks again.
 - If the user gives a 0-10 score, put it in severity_score_0_10.
 - Always set intake_complete=false. The program decides this, not you.
+- If the user mentions something that answers a question we have not asked yet (for example "I'm 44 and I take warfarin"), fill those fields now.
+- If the user says none for several things at once (for example "no medicines and no allergies"), set each of those lists to [].
+- For anything not stated, use null. Never write the word "unknown".
 
 EXAMPLE:
 The user said: "I'm 15, my tummy has hurt since yesterday, not too bad."
