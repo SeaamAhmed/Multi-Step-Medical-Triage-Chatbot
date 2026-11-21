@@ -122,7 +122,7 @@ LIST_TOPICS = (   # (start of the topic text, the field that holds the answer)
     ("any allergies", "allergies"),
 )
 TOPIC_HINTS = (   # (start of the topic text, how to word the question)
-    ("their sex", "Ask simply: 'Are you male or female?'"),
+    ("their sex", "Ask exactly: 'Are you male or female?' Do not mention any other options."),
     ("whether they could be pregnant",
      "Ask kindly: 'Could you be pregnant?' Do not ask about periods or dates."),
     ("how bad it is", "Ask: 'On a scale of 0 to 10, how bad is it?'"),
